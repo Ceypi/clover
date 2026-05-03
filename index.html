@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Animated Mathematical Background</title>
+  <style>
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: black;
+    }
+
+    canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: #000;
+    }
+  </style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+
+<script>
+const canvas = document.getElementById("bg");
+const ctx = canvas.getContext("2d");
+
+let w, h, dpr;
+
+function resize() {
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  w = canvas.width = innerWidth * dpr;
+  h = canvas.height = innerHeight * dpr;
+  canvas.style.width = innerWidth + "px";
+  canvas.style.height = innerHeight + "px";
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+}
+
+window.addEventListener("resize", resize);
+resize();
+
+function drawCurve(t, offset, alpha, widthMul) {
+  ctx.beginPath();
+
+  const cx = w * 0.63;
+  const cy = h * 0.48;
+  const scale = Math.min(w, h) * 0.36;
+
+  for (let i = 0; i <= 1100; i++) {
+    const p = i / 1100;
+    const a = p * Math.PI * 2;
+
+    let r =
+      1.0 +
+      0.22 * Math.sin(2 * a + t * 0.35 + offset) +
+      0.13 * Math.sin(5 * a - t * 0.22);
+
+    let x = Math.cos(a) * r;
+    let y = Math.sin(a) * r;
+
+    const pinch = Math.pow(Math.abs(Math.cos(a)), 2.5);
+    x += -1.5 * pinch;
+
+    const bend =
+      0.35 * Math.sin(a * 2 + t * 0.3 + offset) *
+      Math.pow(Math.abs(Math.sin(a)), 0.8);
+
+    y += bend;
+
+    const px = cx + x * scale;
+    const py = cy + y * scale * 0.72;
+
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+
+  ctx.strokeStyle = `rgba(245, 225, 255, ${alpha})`;
+  ctx.lineWidth = widthMul * dpr;
+  ctx.stroke();
+}
+
+function drawStream(t, offset, alpha) {
+  ctx.beginPath();
+
+  for (let i = 0; i <= 700; i++) {
+    const p = i / 700;
+
+    const x = p * w;
+    const base = h * 0.46;
+
+    const wave =
+      Math.sin(p * 9 + t * 0.4 + offset) * h * 0.018 +
+      Math.sin(p * 19 - t * 0.2) * h * 0.01;
+
+    const pull = Math.exp(-Math.pow((p - 0.34) * 8, 2)) * h * 0.12;
+
+    const y = base + wave - pull * Math.sin(offset);
+
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+
+  ctx.strokeStyle = `rgba(220, 180, 235, ${alpha})`;
+  ctx.lineWidth = 0.8 * dpr;
+  ctx.stroke();
+}
+
+function drawInnerLoops(t, offset, alpha) {
+  ctx.beginPath();
+
+  const cx = w * 0.66;
+  const cy = h * 0.49;
+  const scale = Math.min(w, h) * 0.32;
+
+  for (let i = 0; i <= 900; i++) {
+    const p = i / 900;
+    const a = p * Math.PI * 2;
+
+    const x =
+      Math.sin(a + offset) *
+      Math.cos(a * 0.5 + t * 0.12) *
+      1.25;
+
+    const y =
+      Math.sin(2 * a + t * 0.18 + offset) * 0.68;
+
+    const px = cx + x * scale;
+    const py = cy + y * scale;
+
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+
+  ctx.strokeStyle = `rgba(210, 160, 235, ${alpha})`;
+  ctx.lineWidth = 0.7 * dpr;
+  ctx.stroke();
+}
+
+function animate(time) {
+  const t = time * 0.001;
+
+  ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.globalCompositeOperation = "lighter";
+  ctx.shadowBlur = 18 * dpr;
+  ctx.shadowColor = "rgba(230, 190, 255, 0.9)";
+
+  for (let i = 0; i < 65; i++) {
+    drawCurve(
+      t,
+      i * 0.12,
+      0.018 + Math.sin(i + t) * 0.004,
+      0.55
+    );
+  }
+
+  ctx.shadowBlur = 10 * dpr;
+
+  for (let i = 0; i < 40; i++) {
+    drawStream(t, i * 0.25, 0.025);
+  }
+
+  for (let i = 0; i < 26; i++) {
+    drawInnerLoops(t, i * 0.19, 0.018);
+  }
+
+  ctx.shadowBlur = 25 * dpr;
+  drawCurve(t, 0, 0.13, 1.6);
+
+  requestAnimationFrame(animate);
+}
+
+ctx.fillStyle = "black";
+ctx.fillRect(0, 0, w, h);
+animate(0);
+</script>
+</body>
+</html>
